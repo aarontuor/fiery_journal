@@ -1,0 +1,77 @@
+OBJECTID, Unique integer value corresponding to the record number in the geodatabase from which data were exported.
+brte_cov, Percent (0-100) cheatgrass cover.
+soilmoisttemp_30m_mosaic_rcls_30m, Soil temperature and moisture regime class value. Classes are consistent with those used by Chambers et al. (2014) to relate to resistance and resilience concepts linking soil temperature and moisture regimes to sagebrush ecosystem responses to disturbance and cheatgrass invasion. Spatial data used in this study was compiled for most of the historic range of sage grouse by combining Chambers et al. (2014) map for sage grouse management zones and additional SSURGO soils data. For detailed summary about Chambers et al. (2014) visit, http,//www.sagegrouseinitiative.com/wp-content/uploads/2013/07/Soil-Temp-Moist-Data-Fact-Sheet-HIGH-RES-012215.pdf.
+lanfire_sghr_30m, Original categorical value for LANDFIRE vegetation cover type
+us_eco_I3_sghr_buff50km_30m, Ecoregion value. Source, EPA Level III Ecoregions of the United States (http,//archive.epa.gov/wed/ecoregions/web/html/level_iii_iv-2.html#Level III).
+lat, Latitude in decimal degrees (Datum, NAD 1983).
+long, Longitude in decimal degrees (Datum, NAD 1983).
+dem30m_sghr_16bit_30m, Elevation at sample location (feet above sea level)
+cumprr_oct_jun_30m, Potential Relative Radiation (PRR) is a unitless index of available solar radiation for photosynthetic activity at a given location. PRR was calculated as described by Pierce et al. (2005) by summing digital hillshade Pierce et al. 2005. A simple method for estimating potential relative radiation (PRR) for landscape-scale vegetation analysis. Landscape Ecology 20, 137-147.interpolations for a given period of interest. Hourly hillshade interpolations are performed for daylight hours of the day of each month that most closely represents the average solar period for the month (e.g.; PRR = Sum[Hillshadei-j; m-n]; hours i-j for each representative day of months m-n). PRR in this study is based on solar conditions between October 2014 and June 2015.
+ltmed_wppt_1981_2015_gt0_30m, Long-term median cumulative winter precipitation (mm). For this study; cumulative winter precipitation was based on PRISM (http,//www.prism.oregonstate.edu/) monthly averages for the months of October through April of the following year. The long-term median was based on cumulative winter precipitation from 1980 – 2015.
+ltmed_sumgdd_1981_2014_30m, Long-term median cumulative growing degree days (GDD) between October 1 and April 30. GDD is an index of temperature over a period of time that is suitable for plant growth. It is calculated on a daily basis as follows; [(Tmax – Tmin)/2] – w ; where w is a minimum temperature for growth for the species of interest; and summed for a period of interest. Negative values are set to 0.
+tmax_30yr_norm_##_sghr_30m, 30-year normal monthly maximum temperature (Celsius) for month ## (range 01-12)
+tmax_30yr_norm_annual_sghr_30m, 30-year normal annual maximum temperature (Celsius)
+tmin_30yr_norm_##_sghr_30m, 30-year normal monthly minimum temperature (Celsius) for month ## (range 01-12)
+tmin_30yr_norm_annual_sghr_30m, 30-year normal annual minimum temperature (Celsius)
+ppt_30yr_norm_##_sghr_30m, 30-year normal monthly precipitation (units = mm) for month ## (range 01-12)
+ppt_30yr_norm_annual_sghr_30m, 30-year normal annual precipitation (units = mm) 
+tmax_30yr_norm_11to02_30m, average of 30-year normal monthly maximum temperature during select winter months (Nov-Feb)
+ppt_30yr_norm_12to02_30m, cumulative precipitation (units = mm) during select spring winter months (Dec-Feb)
+ppt_30yr_norm_04to05_30m, cumulative precipitation (units = mm) during select spring season months (Apr-May)
+ppt_30yr_norm_06to09_30m, cumulative precipitation (units = mm) during select summer season months (Jun-Sep)
+tmin_30yr_norm_avg11to12_30m, average of 30-year normal monthly minimum temperature during select winter months (Nov-Dec)
+zmaxyr_dndvi_30m, MODIS delta NDVI from long-term median peak NDVI in year of peak cumulative winter precipitation (see ltmed_wppt for description of cumulative winter precipitation). Long-term median peak NDVI is based on eMODIS peak NDVI for 2001-2014. Year of peak cumulative winter precipitation was determined by calculating an annual Z-score for the corresponding period of record on a multi-temporal pixel basis. The long-term mean and standard deviation values used in the Z-score calculation are based on winter precipitation from 1980-2015. Selection of the year of peak winter precipitation was limited to 2001-2014 to be consistent with NDVI period of record.
+weld_ann_medPNDVI, Landsat7 long-term median annual peak NDVI based on availabe WELD data for 2002-2011.
+weld_ann_dndvi_20##, Landsat7 annual peak NDVI in year 20## (range 2001-2014) minus long-term median annual peak NDVI
+weld_spring_medPNDVI, Landsat7 long-term median spring peak NDVI based on availabe WELD data for 2003-2012.
+weld_summer_medPNDVI, Landsat7 long-term median summer peak NDVI based on availabe WELD data for 2003-2012.
+weld_ann_b1_20##, Landsat7 annual composite blue reflectance in year 20## (range 2002-2011)
+weld_ann_b2_20##, Landsat7 annual composite green reflectance in year 20## (range 2002-2011)
+weld_ann_b3_20##, Landsat7 annual composite red reflectance in year 20## (range 2002-2011)
+weld_ann_b4_20##, Landsat7 annual composite NIR reflectance in year 20## (range 2002-2011)
+weld_ann_b5_20##, Landsat7 annual composite SWIR1 reflectance in year 20## (range 2002-2011)
+weld_ann_b61_20##, Landsat7 annual composite thermal (low gain channel) reflectance in year 20## (range 2002-2011)
+weld_ann_b62_20##, Landsat7 annual composite thermal (high gain channel) reflectance in year 20## (range 2002-2011)
+weld_ann_b7_20##, Landsat7 annual composite SWIR2 reflectance in year 20## (range 2002-2011)
+weld_spring_dndvi_20##, Landsat7 spring peak NDVI in year 20## (range 2003-2012) minus long-term median spring peak NDVI
+weld_spring_b1_20##, Landsat7 spring composite blue reflectance in year 20## (range 2003-2012)
+weld_spring_b2_20##, Landsat7 spring composite green reflectance in year 20## (range 2003-2012)
+weld_spring_b3_20##, Landsat7 spring composite red reflectance in year 20## (range 2003-2012)
+weld_spring_b4_20##, Landsat7 spring composite NIR reflectance in year 20## (range 2003-2012)
+weld_spring_b5_20##, Landsat7 spring composite SWIR1 reflectance in year 20## (range 2003-2012)
+weld_spring_b61_20##, Landsat7 spring composite thermal (low gain channel) reflectance in year 20## (range 2003-2012)
+weld_spring_b62_20##, Landsat7 spring composite thermal (high gain channel) reflectance in year 20## (range 2003-2012)
+weld_spring_b7_20##, Landsat7 spring composite SWIR2 reflectance in year 20## (range 2003-2012)
+weld_summer_dndvi_20##, Landsat7 summer peak NDVI in year 20## (range 2001-2014) minus long-term median summer peak NDVI
+weld_summer_b1_20##, Landsat7 summer composite blue reflectance in year 20## (range 2003-2012)
+weld_summer_b2_20##, Landsat7 summer composite green reflectance in year 20## (range 2003-2012)
+weld_summer_b3_20##, Landsat7 summer composite red reflectance in year 20## (range 2003-2012)
+weld_summer_b4_20##, Landsat7 summer composite NIR reflectance in year 20## (range 2003-2012)
+weld_summer_b5_20##, Landsat7 summer composite SWIR1 reflectance in year 20## (range 2003-2012)
+weld_summer_b61_20##, Landsat7 summer composite thermal (low gain channel) reflectance in year 20## (range 2003-2012)
+weld_summer_b62_20##, Landsat7 summer composite thermal (high gain channel) reflectance in year 20## (range 2003-2012)
+weld_summer_b7_20##, Landsat7 summer composite SWIR2 reflectance in year 20## (range 2003-2012)
+mod_annual_Band_1_2001, MODIS NDVI value at time of annual peak NDVI in year 20## (range 2001-2016)
+mod_annual_Band_2_20##, MODIS EVI value at time of annual peak NDVI in year 20## (range 2001-2016)
+mod_annual_Band_3_20##, MODIS red band value at time of annual peak NDVI in year 20## (range 2001-2016)
+mod_annual_Band_4_20##, MODIS NIR band value at time of annual peak NDVI in year 20## (range 2001-2016)
+mod_annual_Band_5_20##, MODIS blue band value at time of annual peak NDVI in year 20## (range 2001-2016)
+mod_annual_Band_6_20##, MODIS MIR band value at time of annual peak NDVI in year 20## (range 2001-2016)
+mod_annual_Band_8_20##, MODIS annual delta peak NDVI in year 20## (range 2001-2016) where delta is year i peak minus long-term median annual peak
+mod_spring_Band_1_20##, MODIS NDVI value at time of spring peak NDVI in year 20## (range 2001-2016)
+mod_spring_Band_2_20##, MODIS EVI value at time of spring peak NDVI in year 20## (range 2001-2016)
+mod_spring_Band_3_20##, MODIS red band value at time of spring peak NDVI in year 20## (range 2001-2016)
+mod_spring_Band_4_20##, MODIS NIR band value at time of spring peak NDVI in year 20## (range 2001-2016)
+mod_spring_Band_5_20##, MODIS blue band value at time of spring peak NDVI in year 20## (range 2001-2016)
+mod_spring_Band_6_20##, MODIS MIR band value at time of spring peak NDVI in year 20## (range 2001-2016)
+mod_spring_Band_8_20##, MODIS spring delta peak NDVI in year 20## (range 2001-2016) where delta is year i spring peak minus long-term median spring peak
+mod_summer_Band_1_20##, MODIS NDVI value at time of summer peak NDVI in year 20## (range 2001-2016)
+mod_summer_Band_2_20##, MODIS EVI value at time of summer peak NDVI in year 20## (range 2001-2016)
+mod_summer_Band_3_20##, MODIS red band value at time of summer peak NDVI in year 20## (range 2001-2016)
+mod_summer_Band_4_20##, MODIS NIR band value at time of summer peak NDVI in year 20## (range 2001-2016)
+mod_summer_Band_5_20##, MODIS blue band value at time of summer peak NDVI in year 20## (range 2001-2016)
+mod_summer_Band_6_20#, MODIS MIR band value at time of summer peak NDVI in year 20## (range 2001-2016)
+mod_summer_Band_8_20##, MODIS spring delta peak NDVI in year 20## (range 2001-2016) where delta is year i spring peak minus long-term median spring peak
+mod_annual_medPNDVI, MODIS long-term median annual peak NDVI based on 2001-2016 MOD13Q1.006 collection from EarthEngine
+mod_spring_medPNDVI, MODIS long-term median spring (Mar-May)peak NDVI based on 2001-2016 MOD13Q1.006 collection from EarthEngine
+mod_summer_medPNDVI, MODIS long-term median summer (Jun-Aug) peak NDVI based on 2001-2016 MOD13Q1.006 collection from EarthEngine
