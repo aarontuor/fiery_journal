@@ -220,7 +220,7 @@ The study area spans 23 of the 182 level III ecoregions as defined by the U.S. E
 
 \subsubsection{LANDFIRE Landcover}
 Categorical value for vegetation cover type generalized from LANDFIRE (www.landfire.gov) vegetation data. 15 classes.\\
-\subsection{Satellite Imagery} For each location $i$ in the full study region, we have retrieved yearly and seasonal image data from the MODIS and LandSat platform and derived vegetation indexes.
+\subsection{Satellite Imagery}\label{sat} For each location $i$ in the full study region, we have retrieved yearly and seasonal image data from the MODIS and LandSat platform and derived vegetation indexes.
 \subsubsection{Normalized Difference Vegetation Index}
 NDVI values provided by the LandSat \cite{usgs2014landsat} and MODIS platforms are calculated as a ratio between the red (R) and near infrared (NIR) values as:
 \begin{equation}
@@ -336,7 +336,7 @@ $\cellcolor[gray]{0.9}x_{47}$ &\cellcolor[gray]{0.9} Cumulative precipitation du
 $x_{48}$ & Cumulative precipitation during select spring season months (Apr-May).\\
 $x_{49}$ & Cumulative precipitation during select  summer season months (Jun-Sep).\\
 $x_{50}$ & 30-year normal monthly minimum temperature during select winter months (Nov-Dec).\\
-$\cellcolor[gray]{0.9}x_{51}$&\cellcolor[gray]{0.9}MODIS long-term median annual peak NDVI.\\
+%$\cellcolor[gray]{0.9}x_{51}$&\cellcolor[gray]{0.9}MODIS long-term median annual peak NDVI.\\
 \cellcolor[gray]{0.9}$x_{52}$ & \cellcolor[gray]{0.9}Delta NDVI (Normalized Difference Vegetation Index) from long term median peak NDVI in year of peak cumulative winter precipitation.\\
 $x_{53}$&Landsat7 long-term median annual peak NDVI.\\
 $x_{54}$&Landsat7 long-term median spring peak NDVI.\\
@@ -356,7 +356,7 @@ $x_{664}$ & MODIS summer peak NDVI.\\
 %=============================================================================================
 %============================================================================================
 \section{Methods}
-In our search for prospective models for producing high quality predictive maps at finest resolution across the full range of our study area, we explored regression models which predict the actual coverage of cheatgrass, as well as classification models. For the categorical mapping of cheatgrass
+In our search for prospective models for producing high quality predictive maps at finest resolution across the full range of our study area, we explored classification models for the presence of cheatgrass. For the categorical mapping of cheatgrass
 occurrence, we chose two cover classes based on an evident separation in cheatgrass cover in the field
 data: $≤ 2\%$ (low cover or absent) or cover $> 2\%$ (high cover or present \ref{fig:cov}. 
 %Use of these classes provided better ability to distinguish cheatgrass with respect to the variables included in the model. 
@@ -381,7 +381,9 @@ by the standard deviation.
 
 
 \subsection{Baseline Models}
-For this study we explored two baseline methods for classification, Random Forest, and Linear Discriminant Analysis. We also explored two regression models, linear regression and a Random Forest regressor. For all baseline models, only the continuous variables were used as input. We used the implementation of Random Forest, Linear Discriminant Analysis, and Linear Regression provided in the Sci-kit learn python library.
+For this study we explored two baseline methods for classification, Random Forest (RF), and Linear Discriminant Analysis (LDA). 
+%We also explored two regression models, linear regression and a Random Forest regressor. 
+We chose LDA as a baseline model for comparison of the current approach to prior work on mapping cheatgrass with a linear model using satellite imagery. Random Forest was chosen as it has competitive performance with deep learning models in low resource data regimes as is the case of our 6,000 field locations. We used the implementation of Random Forest and Linear Discriminant Analysis  provided in the Sci-kit learn python library.
 
 %D1
 %{'bootstrap': True, 'min_samples_leaf': 4, 'n_estimators': 136, 'max_features': 'sqrt', 'min_samples_split': 5, 'max_depth': 80}
@@ -395,12 +397,74 @@ For this study we explored two baseline methods for classification, Random Fores
 %D4
 %{'bootstrap': False, 'min_samples_leaf': 4, 'n_estimators': 200, 'max_features': 'auto', 'min_samples_split': 2, 'max_depth': 60}
 %0.826425677781
+%============================================================================================
+% Subsection Deep Learning Models================================================
+%=============================================================================================
 \subsection{Deep Learning Models}
-For deep learning models we use both and RNN and DNN. Will add more to this.
-\subsubsection{Deep Neural Network}
-The deep neural network for classification and regresssion is depicted in Figure \ref{fig:dnn}. I will add a more detailed description soon.
+Deep learning models were chosen as prospective modeling candidates due to their potential for mapping high dimensional input features (such as our 664 continuous variables and 3 categorical values) into a lower dimensional representation which captures the inherent relationships between variables to greatest effect. The final layer of our deep learning models is the same transformation that is learned for logistic regression in the case of classification.
+% and linear regression in the case of regression predictions. 
+A convenient way to view a deep learning model in our context is that it learns a parametrized non-linear mapping from input variables to a latent variable which is then used as input to a linear model. The parameters of the non-linear mapping and ultimate linear model are fit jointly, end to end using the ADAM variant of stochastic gradient descent. 
+
+We define the inputs to the neural network as a real valued vector $\widehat{{\bf x}}^{(i)}$ , it's predictions $\widehat{{\bf y}}^{(i)}\in \mathbb{R}^2$, a probability distribution over 2 classes, and the ground truth for a field location as ${\bf y}^{(i)}$. Since we are interested in an ablative analysis of the contributions in modeling performance from using data from satellite platforms jointly and independently we define subsets on the full set of continuous variables defined as ${\bf x}$ in Table \ref{tab:data}:
+\begin{eqnarray}\label{eqn:subset}
+D_1({\bf x}) &= {\bf x}_{1:50}\hspace{50pt}&\textrm{Biophysical variables}\\
+D_2({\bf x})  &= {\bf x}_{1:50,326:664}\hspace{50pt}&\textrm{Biophysical varibles + MODIS}\\
+D_3({\bf x})  &= {\bf x}_{1:325}\hspace{50pt}&\textrm{Biophysical varibles + LandSat}\\
+D_4({\bf x}) &= {\bf x}\hspace{50pt}&\textrm{All variables}\\\label{eqn:subset2}
+\end{eqnarray}
+
+Since our data contains categorical variables derived from ecological analysis which we wish to incorporate into the model we define three learned embedding matrices for the categorical variables, ${\bf W}_{\texttt{cover}}\in \mathbb{R}^{15 \times k}$, ${\bf W}_{\texttt{eco}}\in \mathbb{R}^{23 \times k}$, and ${\bf W}_{\texttt{soil}}\in \mathbb{R}^{9 \times k}$, corresponding to the 15 classes of derived generalized LANDFIRE cover classes, the 23 level III ecoregions, and the 9 soil temperature and moisture regime class values exhibited in the full study region. The rows of these matrices correspond to classes for their respective categories. The number of columns $k$ is the size of the embedding vector for a class; a so called hyperparameter or modeling choice. These embedding vectors are learned jointly with the other parameters of the neural network. Our input to a prospective neural network model is then defined using block matrix notation as:
+\begin{equation}
+\widehat{{\bf x}}^{(i)} = \begin{bmatrix}{\bf c}_1^{(i)}{\bf W}_{\texttt{soil}}&{\bf c}_2^{(i)}{\bf W}_{\texttt{cover}}&{\bf c}_3^{(i)}{\bf W}_{\texttt{eco}}&D_*\bigl({\bf x}^{(i)}\bigr)\end{bmatrix}
+\end{equation}
+where ${\bf c}_1^{(i)}$, ${\bf c}_3^{(i)}$, and ${\bf c}_3^{(i)}$ are so called one hot representations\footnote{A one hot class vector representation has a number of elements equal to the number of classes with a 1 for the class represented and 0 everywhere else} of soil, land cover, and ecoregion class respectively, and $D_*\bigl({\bf x}^{(i)}\bigr)$ is one of the four subsets of continuous variables defined in Equations \ref{eqn:subset}$-$\ref{eqn:subset2}. The row vector matrix multiplications select the embedding vector associated with a particular class so that it can be concatenated to the rest of the continuous variables in the neural network input. For simplicity of notation the rest of discussion for deep learning model development we will omit subscripts $i$.
+%============================================================================================
+% Subsubsection DNN================================================
+%=============================================================================================
+\subsubsection{Deep Neural Network}\label{dnn}
+Particular deep neural network (DNN) configurations for classification and regresssion are depicted in Figure \ref{fig:dnn}. The model consists of $L$ hidden layers ${\bf h}_l$ which are recursively defined as:
+
+\begin{eqnarray}
+{\bf h}_l &= &\texttt{RELU}({\bf W}_l {\bf h}_{l-1} + {\bf b}_l)\\
+{\bf h}_0&=&\widehat{{\bf x}}
+\end{eqnarray}
+
+where the nonlinear \texttt{RELU} operation is defined as the elementwise vector valued operation:
+\begin{equation}
+\texttt{RELU}({\bf x})_i = \texttt{max}({\bf x}_i, 0)
+\end{equation}
+
+
+The output of the DNN maps the final hidden representation ${\bf h}_L$ to a probability distribution over cheatgrass occurence classes of the form:
+\begin{equation}
+\widehat{{\bf y}} = \texttt{softmax}({\bf W}_{L+1}{\bf h}_L + {\bf b}_{L+1})
+\end{equation}
+
+where the \texttt{softmax} operation is defined as the elementwise vector valued operation:
+\begin{equation}
+\texttt{softmax}({\bf x})_i = \frac{e^{{\bf x}_i}}{\sum_{j}e^{{\bf x}_j}}
+\end{equation}
+
+The parameters ${\bf W}$, ${\bf b}$ are optimized using stochastic gradient descent with the objective function being the cross-entropy loss between the predicted class distribution $\widehat{{\bf y}}$ and true class distribution ${\bf y}$. Beyond this basic formulation we also employ dropout for normalization to aviod overfitting and batch normalization for better conditioned gradient updates. 
+%============================================================================================
+% Subsubsection RNN================================================
+%=============================================================================================
 \subsubsection{Recurrent Neural Network}
-The recurrent neural network for classification and regression is depicted in Figure \ref{fig:rnn}. I will add a more detailed description soon.
+A deep neural network as described in \ref{dnn} has the potential as a universal function approximator to model cheatgrass distribution given the field data with an optimal Bayes error. In practice however, since the optimal function may be difficult to find during the optimization we developed a joint recurrent neural network (RNN) model intended to take greater advantage of the time series implicit in the satellite imagery data. In this section we detail a model for fusing time series of data from different satellite platforms into a latent representation that can be used for linear classification. The model consists of two separate bidirectional RNNs which model time series of the MODIS and LandSat derived imagery products respectively. 
+A particular instantiation of this modeling approach is depicted in Figure \ref{fig:rnn}. More formally we define two bidirectional Long Short Term Memory networks  which are operations on sequences of pixel vectors from the MODIS and LandSat platforms respectively,  $\texttt{LSTM}_{\texttt{MOD}}(\mathcal{X})$ and  $\texttt{LSTM}_{\texttt{LAN}}(\mathcal{X})$. Given a seqence of vectors $\mathcal{X}$ each LSTM outputs a condensed vector representation of the time series. The time series for the MODIS and LandSat data consist of sequences of 16, and 10 vectors respectively, one for each year that pixel values were obtained. From the notation developed in \ref{sat}, the $t$-th vector in the LandSat series is:
+\begin{equation}{\bf \mathcal{X}}^{\texttt{LAN}}_{t} =
+\begin{bmatrix}{\bf L}^{\texttt{annual}}_{t,1}& ....& {\bf L}^{\texttt{annual}}_{t,10}&{\bf L}^{\texttt{spring}}_{t,1}& ....& {\bf L}^{\texttt{spring}}_{t,10}& {\bf L}^{\texttt{summer}}_{t,1}& ...& {\bf L}^{\texttt{summer}}_{t,10}\end{bmatrix}
+\end{equation}
+whereas the $t$-th vector in the MODIS time series is:
+\begin{equation}{\bf \mathcal{X}}^{\texttt{MOD}}_{t} =
+\begin{bmatrix}{\bf M}^{\texttt{annual}}_{t,1}& ....& {\bf M}^{\texttt{annual}}_{t,10}&{\bf M}^{\texttt{spring}}_{t,1}& ....& {\bf M}^{\texttt{spring}}_{t,10}& {\bf M}^{\texttt{summer}}_{t,1}& ...& {\bf M}^{\texttt{summer}}_{t,10}\end{bmatrix}
+\end{equation}
+
+These resulting representation vectors are concatenated with the categorical embeddings and the continuous biophysical variables for the input to a deep neural network as described in \ref{dnn} where:
+\begin{equation}
+\widehat{{\bf x}} = \begin{bmatrix}{\bf c}_1{\bf W}_{\texttt{soil}}&{\bf c}_2{\bf W}_{\texttt{cover}}&{\bf c}_3{\bf W}_{\texttt{eco}}&D_1 \bigl({\bf x}\bigr) &\texttt{LSTM}_{\texttt{MOD}}\bigl(\mathcal{X}^{\texttt{MOD}}\bigr)&\texttt{LSTM}_{\texttt{LAN}}\bigl(\mathcal{X}^{\texttt{LAN}}\bigr)\end{bmatrix}
+\end{equation}
+
 \begin{figure}
 \centering
 \begin{minipage}{.48\textwidth}
@@ -419,7 +483,6 @@ The recurrent neural network for classification and regression is depicted in Fi
 %============================================================================================
 % Subsection Experimental Setup================================================
 %=============================================================================================
-\subsection{Performance on Field measurement locations}
 \subsection{Experimental Setup}
 In order to gage the effectiveness of incorporating satellite data from multiple platforms we trained each prospective model on each of four subsets of the complete data. For the neural network models we also include the categorical variables for each subset of the data. 
 \begin{itemize}
@@ -435,30 +498,18 @@ We performed a random hyperparameter search for each prospective model. For each
 %=============================================================================================
 %============================================================================================
 \section{Results and Analysis}
-In this section we discuss the results of experiments in turn. In section \ref{sec:res1} we discuss performance of all models trained for the field locations in the dataset. Then we limit the scope of our analysis ot the training performance for the best performing model. We continue to explore the strengths and weaknesses of the best performing model which we derive the final mapping product from in Section. Finally we explore the effectiveness of the final mapping product using ecological analysis. 
+In this section we discuss the results of experiments and analyze the model predictions for the final mapping product. In section \ref{sec:res1} we discuss performance of all models trained for the field locations in the dataset. Following this discussion we perform a detailed ablation analysis for the described subsets of variables on the best performing model. To this end we first discuss training statistics for models from each variable subset, performing an ablation analysis on key training statistics. We then look more closely at the classification performance to assess potential weaknesses in the prospective model by analysis of predictions versus true class considering high level derived variables such as ecoregion, coverage class and soil regime. Finally, we shift our focus to analysis and assessment of the complete mapping product derived from the highest performing model, with specific focus on the variation of confidence for various points in the full study region that were not present in the training data. 
 %============================================================================================
 % Subsection Performance on Field measurement locations================================================
 %=============================================================================================
 \subsection{Performance on Field measurement locations}
 In this section we report statistics on field measurement locations.
 \subsubsection{Quantitative assessment} \label{sec:res1}
-Quantitative results are reported for the average performance across cross-validation folds for each of the 4 subsets of input variables. Tables \ref{tab:perf3} and \ref{tab:perf2} show the outcomes of experiments in terms of accuracy for regression and classification prediction respectively. We chose the best performing model in terms of accuracy to create the final mapping product, and for this model we report several classification statistics for each of the four input variable subsets in Table \ref{tab:dnnperf}.
+Quantitative results are reported for the average performance across cross-validation folds for each of the 4 subsets of input variables. Table \ref{tab:perf2} shows the outcomes of experiments in terms of accuracy for classification prediction. 
+The best performing subset of input variables is bolded in each row of the tables, while the best overall performing model, the DNN using all available input data is highlighted in red. We note a a few trends. Incorporating satellite data of either form leads to better results. In addition, Random forest and LDA do not gain any advantage from incorporating both MODIS and LandSat imagery whereas the neural network models improve in accuracy from incorporating imagery from both platforms. Finally, we note that the recurrent neural network did not perform as well as the DNN, possibly due to the larger number of parameters to be fit on the same number of data points.
+
+We chose the best performing model in terms of accuracy (DNN with all input variables) to create the final mapping product, and for this model we report several classification statistics for each of the four input variable subsets in Table \ref{tab:dnnperf}. Here we the same trend for recall, F-score, and area under the ROC curve in that adding imagery from either sattellite platform gives the most significant improvement, with the LandSat imagery demonstrating more improvement. The best results for all these metrics are once again from the inclusion of imagery from both satellite platforms. 
   \begin{figure}
-  \begin{minipage}[b]{0.49\textwidth}
-    \centering
-\begin{tabularx}{\linewidth}{l r r r r r}
-		\toprule[.2em]
-		 &$D_1$ &$D_2$&$D_3$&$D_4$\\
-		\midrule
-		{\bf LR}&0.1340  & 0.1115&{\bf 0.1041} &0.1059\\
-		{\bf RF}& 0.0913  &0.0926&0.0909 &{\bf 0.0909}\\
-		{\bf DNN}&0.1006  &0.0795&0.0787 &\textcolor{red}{\bf 0.0746}\\
-		{\bf RNN}&---  & 0.0790&0.0806 &{\bf 0.0766}\\
-		\bottomrule[.2em]
-	\end{tabularx}
-	\captionof{table}{Mean Absolute Error for predicting cheat grass coverage.} \label{tab:perf3}
-  \end{minipage}
-  \hfill
   \begin{minipage}[b]{0.49\textwidth}
     \centering
  \begin{tabularx}{\linewidth}{l r r r r r}
@@ -466,19 +517,30 @@ Quantitative results are reported for the average performance across cross-valid
 		 &$D_1$& $D_2$&$D_3$&$D_4$\\
 		\midrule
 		{\bf LDA}&73.816 & 78.279&{\bf 80.653} &79.826\\
-		{\bf RF}&80.897 &81.142&{\bf 82.736} &82.643\\
+		{\bf RF}&80.165 &81.677&82.502 &{\bf 82.798}\\
 		{\bf DNN}&79.604& 82.004&82.456 &\textcolor{red}{\bf 83.203}\\
-		{\bf RNN}&--- & 81.388&81.820 &{\bf 82.597}\\
+		{\bf RNN}&--- & 81.388&81.820 &{\bf 82.707}\\
 		\bottomrule[.2em]
 	\end{tabularx}
 	\captionof{table}{Classification accuracy of models for subsets of data} \label{tab:perf2}
     \end{minipage}
-  \end{figure}
-
-\begin{table}
+\hfill
+  \begin{minipage}[b]{0.49\textwidth}
+    \centering
+%\begin{tabularx}{\linewidth}{l r r r r r}
+%		\toprule[.2em]
+%		 &$D_1$ &$D_2$&$D_3$&$D_4$\\
+%		\midrule
+%		{\bf LR}&0.1340  & 0.1115&{\bf 0.1041} &0.1059\\
+%		{\bf RF}& 0.0913  &0.0926&0.0909 &{\bf 0.0909}\\
+%		{\bf DNN}&0.1006  &0.0795&0.0787 &\textcolor{red}{\bf 0.0746}\\
+%		{\bf RNN}&---  & 0.0790&0.0806 &{\bf 0.0766}\\
+%		\bottomrule[.2em]
+%	\end{tabularx}
+%	\captionof{table}{Mean Absolute Error for predicting cheat grass coverage.} \label{tab:perf3}
 \begin{tabularx}{\linewidth}{l r r r r r r}
 		\toprule[.2em]
-		 &{\bf Precision}& {\bf Recall}&{\bf F-score}&{\bf AUC}&{\bf Accuracy}&{\bf Std. Accuracy}\\
+		 &{\bf Prec.}& {\bf Rec.}&{\bf F-scr}&{\bf AUC}&{\bf Acc.}&{\bf Std.}\\
 		\midrule
 		$D_1$&0.795& 0.820&0.808 &0.866&0.796&0.025\\
 		$D_2$&0.844 &0.803&0.823 &0.893&0.820&0.014\\
@@ -486,15 +548,119 @@ Quantitative results are reported for the average performance across cross-valid
 		$D_4$&0.837& 0.842&0.839 &0.902&0.832&0.012\\
 		\bottomrule[.2em]
 	\end{tabularx}
-	\caption{Performance across a range of metrics for most accurate DNN models for each subset of input variables.} \label{tab:dnnperf}
-\end{table}
+	\captionof{table}{Performance across a range of metrics for most accurate DNN models for each subset of input variables. The last column reports the standard deviation of the accuracy across different cross-validation folds.} \label{tab:dnnperf}
+  \end{minipage}
+ 
+  \end{figure}
+
+ \begin{figure}
+  \begin{minipage}[b]{0.49\textwidth}
+    \centering
+
+\begin{tabularx}{\linewidth}{l r r r r r r}
+		\toprule[.2em]
+		 &{\bf Prec.}& {\bf Rec.}&{\bf F-scr}&{\bf AUC}&{\bf Acc.}&{\bf Std.}\\
+		\midrule
+		$D_1$&--& --&-- &--&--&--\\
+		$D_2$&-- &--&--- &---&---&---\\
+		$D_3$&---& ---&--- &---&---&---\\
+		$D_4$&0.830& 0.840&0.835 &0.904&0.827&0.011\\
+		\bottomrule[.2em]
+	\end{tabularx}
+	\captionof{table}{Performance across a range of metrics for most accurate RNN models for each subset of input variables. The last column reports the standard deviation of the accuracy across different cross-validation folds.} \label{tab:dnnperf}
+    \end{minipage}
+\hfill
+  \begin{minipage}[b]{0.49\textwidth}
+    \centering
+
+
+
+
+\begin{tabularx}{\linewidth}{l r r r r r r}
+		\toprule[.2em]
+		 &{\bf Prec.}& {\bf Rec.}&{\bf F-scr}&{\bf AUC}&{\bf Acc.}&{\bf Std.}\\
+		\midrule
+		$D_1$&0.807& 0.815&0.811 &0.883&0.802&0.024\\
+		$D_2$&0.825 &0.823&0.824 &0.891&0.816&0.024\\
+		$D_3$&0.827& 0.838&0.833 &0.901&0.825&0.021\\
+		$D_4$&0.835& 0.835&0.835 &0.904&0.828&0.025\\
+		\bottomrule[.2em]
+	\end{tabularx}
+	\captionof{table}{Performance across a range of metrics for most accurate RF models for each subset of input variables. The last column reports the standard deviation of the accuracy across different cross-validation folds.} \label{tab:dnnperf}
+  \end{minipage}
+ 
+  \end{figure}
+%\begin{table}
+%\begin{tabularx}{\linewidth}{l r r r r r r}
+%		\toprule[.2em]
+%		 &{\bf Precision}& {\bf Recall}&{\bf F-score}&{\bf AUC}&{\bf Accuracy}&{\bf Std. Accuracy}\\
+%		\midrule
+%		$D_1$&0.795& 0.820&0.808 &0.866&0.796&0.025\\
+%		$D_2$&0.844 &0.803&0.823 &0.893&0.820&0.014\\
+%		$D_3$&0.831& 0.833&0.832 &0.900&0.825&0.015\\
+%		$D_4$&0.837& 0.842&0.839 &0.902&0.832&0.012\\
+%		\bottomrule[.2em]
+%	\end{tabularx}
+%	\caption{Performance across a range of metrics for most accurate DNN models for each subset of input variables.} \label{tab:dnnperf}
+%\end{table}
 
 %================================
 % Subsubsection Training Statistics
 %================================
 \subsubsection{Training Statistics}
-In this section we analyse training statistics for the best performing model. Discussion to be provided soon.
+In this section we analyse training statistics for the best performing model. We first look at plots of train versus test performance for the best performing cross-validation fold for each of the input variable subsets. Looking at several different metrics we see training is noisier and has a greater tendency to overfit with inclusion of the modis data. Conversely we see that incorporating the LandSat data into the model has a regularizing effect which limits the amount of overfitting so that test performance converges closer to train performance. We also consider the dropout probability for each data subset (for each model run a random dropout probability was selected to be between 0.5 and 1.0. Table \ref{drop} shows the dropout probabilities and hidden layer sizes for the different data subsets. The columns for using MODIS only or LandSat show that these models have comparable dropout probabilities and network size. The MODIS only input model does have the largest network which greatens the chance of overfitting but a large dropout probability which should have more of a regularizing effect. A more careful analysis with identical sized networks and dropout probabilities would confirm what the present analysis suggests (that the MODIS data has some properties which encourage overfitting). With careful use of early stopping we can see in figure 53 that the best loss  can in fact be achieved by incorporating all the data. 
+
+\begin{table}
+\begin{tabularx}{\linewidth}{l r r r r}
+		\toprule[.2em]
+		 &{\bf $D_1$}& {\bf $D_2$}&{\bf $D_3$}&{\bf $D_4$}\\
+		\midrule
+		Dropout Probability&0.275&0.350& 0.30&.5\\
+		Layer 1&256&256& 256&256\\
+		Layer 2&256&256&64&32\\
+		Layer 3&64&128&256&256\\
+		\bottomrule[.2em]
+	\end{tabularx}
+	\caption{Hyperparameters for most accurate DNN models for each subset of input variables.} \label{tab:dnnhyper}
+\end{table}
+%d1 dp 7.25 256 256 64
+%d2 dp 0.65 256 256 128
+%d3 dp 0.7 256 64 256
+%d4 dp .5 256 32 256
+%================================
+% Subsubsection Best Training Statistics
+%================================
 % Accuracy Train versus test
+%best
+\begin{figure}
+\centering
+\begin{minipage}{.24\textwidth}
+  \centering
+\includegraphics[width=\textwidth]{pics/d1_train_accuracy_best_train_test.png}
+\caption{$D_1$}\label{fig:d1acctraintest}
+\end{minipage}
+\begin{minipage}{.01\textwidth}
+\end{minipage}
+\begin{minipage}{.24\textwidth}
+  \centering
+\includegraphics[width=\textwidth]{pics/d2_train_accuracy_best_train_test.png}
+\caption{$D_2$}\label{fig:d2acctraintest}
+\end{minipage}
+\begin{minipage}{.24\textwidth}
+  \centering
+\includegraphics[width=\textwidth]{pics/d3_train_accuracy_best_train_test.png}
+\caption{$D_3$}\label{fig:d3acctraintest}
+\end{minipage}
+\begin{minipage}{.01\textwidth}
+\end{minipage}
+% average
+\begin{minipage}{.24\textwidth}
+  \centering
+\includegraphics[width=\textwidth]{pics/d4_train_accuracy_best_train_test.png}
+\caption{$D_4$}\label{fig:d4acctraintest}
+\end{minipage}
+\caption{Train versus test accuracy for the best performing cross-validation fold for input variable subsets}\label{fig:traintestacc}
+\end{figure}
 \begin{figure}
 \centering
 \begin{minipage}{.24\textwidth}
@@ -521,9 +687,39 @@ In this section we analyse training statistics for the best performing model. Di
 \includegraphics[width=\textwidth]{pics/d4_train_accuracy_mean_train_test.png}
 \caption{$D_4$}\label{fig:d4acctraintest}
 \end{minipage}
-\caption{Train versus test accuracy over epochs for input variable subsets}\label{fig:traintestacc}
+\caption{Train versus test accuracy for the average of cross-validation folds for input variable subsets}\label{fig:traintestacc}
 \end{figure}
 % ROC Train versus test
+%best
+\begin{figure}
+\centering
+\begin{minipage}{.24\textwidth}
+  \centering
+\includegraphics[width=\textwidth]{pics/d1_train_auc_best_train_test.png}
+\caption{$D_1$}\label{fig:d1acctraintest}
+\end{minipage}
+\begin{minipage}{.01\textwidth}
+\end{minipage}
+\begin{minipage}{.24\textwidth}
+  \centering
+\includegraphics[width=\textwidth]{pics/d2_train_auc_best_train_test.png}
+\caption{$D_2$}\label{fig:d2acctraintest}
+\end{minipage}
+\begin{minipage}{.24\textwidth}
+  \centering
+\includegraphics[width=\textwidth]{pics/d3_train_auc_best_train_test.png}
+\caption{$D_3$}\label{fig:d3acctraintest}
+\end{minipage}
+\begin{minipage}{.01\textwidth}
+\end{minipage}
+\begin{minipage}{.24\textwidth}
+  \centering
+\includegraphics[width=\textwidth]{pics/d4_train_auc_best_train_test.png}
+\caption{$D_4$}\label{fig:d4acctraintest}
+\end{minipage}
+\caption{Train versus test area under the ROC curve for best performing cross-validation fold for input variable subsets}\label{fig:traintestauc}
+\end{figure}
+%average
 \begin{figure}
 \centering
 \begin{minipage}{.24\textwidth}
@@ -550,9 +746,39 @@ In this section we analyse training statistics for the best performing model. Di
 \includegraphics[width=\textwidth]{pics/d4_train_auc_mean_train_test.png}
 \caption{$D_4$}\label{fig:d4acctraintest}
 \end{minipage}
-\caption{Train versus test area under the ROC curve over epochs for input variable subsets}\label{fig:traintestauc}
+\caption{Train versus test area under the ROC curve for average of cross-validation folds for input variable subsets}\label{fig:traintestauc}
 \end{figure}
 % F-measure Train versus test
+%best
+\begin{figure}
+\centering
+\begin{minipage}{.24\textwidth}
+  \centering
+\includegraphics[width=\textwidth]{pics/d1_train_fscore_best_train_test.png}
+\caption{$D_1$}\label{fig:d1fscoretraintest}
+\end{minipage}
+\begin{minipage}{.01\textwidth}
+\end{minipage}
+\begin{minipage}{.24\textwidth}
+  \centering
+\includegraphics[width=\textwidth]{pics/d2_train_fscore_best_train_test.png}
+\caption{$D_2$}\label{fig:d2fscoretraintest}
+\end{minipage}
+\begin{minipage}{.24\textwidth}
+  \centering
+\includegraphics[width=\textwidth]{pics/d3_train_fscore_best_train_test.png}
+\caption{$D_3$}\label{fig:d3fscoretraintest}
+\end{minipage}
+\begin{minipage}{.01\textwidth}
+\end{minipage}
+\begin{minipage}{.24\textwidth}
+  \centering
+\includegraphics[width=\textwidth]{pics/d4_train_fscore_best_train_test.png}
+\caption{$D_4$}\label{fig:d4fscoretraintest}
+\end{minipage}
+\caption{Train versus test F-score of best performing cross-validation fold for input variable subsets}\label{fig:traintestfscore}
+\end{figure}
+%average
 \begin{figure}
 \centering
 \begin{minipage}{.24\textwidth}
@@ -579,9 +805,39 @@ In this section we analyse training statistics for the best performing model. Di
 \includegraphics[width=\textwidth]{pics/d4_train_fscore_mean_train_test.png}
 \caption{$D_4$}\label{fig:d4fscoretraintest}
 \end{minipage}
-\caption{Train versus test F-score over epochs for input variable subsets}\label{fig:traintestfscore}
+\caption{Train versus test F-score of average cross-validation score for input variable subsets}\label{fig:traintestfscore}
 \end{figure}
 % Cross Entropy Train versus test
+%best
+\begin{figure}
+\centering
+\begin{minipage}{.24\textwidth}
+  \centering
+\includegraphics[width=\textwidth]{pics/d1_train_loss_best_train_test.png}
+\caption{$D_1$}\label{fig:d1lossraintest}
+\end{minipage}
+\begin{minipage}{.01\textwidth}
+\end{minipage}
+\begin{minipage}{.24\textwidth}
+  \centering
+\includegraphics[width=\textwidth]{pics/d2_train_loss_best_train_test.png}
+\caption{$D_2$}\label{fig:d2losstraintest}
+\end{minipage}
+\begin{minipage}{.24\textwidth}
+  \centering
+\includegraphics[width=\textwidth]{pics/d3_train_loss_best_train_test.png}
+\caption{$D_3$}\label{fig:d3losstraintest}
+\end{minipage}
+\begin{minipage}{.01\textwidth}
+\end{minipage}
+\begin{minipage}{.24\textwidth}
+  \centering
+\includegraphics[width=\textwidth]{pics/d4_train_loss_best_train_test.png}
+\caption{$D_4$}\label{fig:d4losstraintest}
+\end{minipage}
+\caption{Train versus test cross entropy loss for best performing cross-validation fold for input variable subsets}\label{fig:traintesloss}
+\end{figure}
+%average
 \begin{figure}
 \centering
 \begin{minipage}{.24\textwidth}
@@ -608,9 +864,42 @@ In this section we analyse training statistics for the best performing model. Di
 \includegraphics[width=\textwidth]{pics/d4_train_loss_mean_train_test.png}
 \caption{$D_4$}\label{fig:d4losstraintest}
 \end{minipage}
-\caption{Train versus test cross entropy loss over epochs for input variable subsets}\label{fig:traintesloss}
+\caption{Train versus test cross entropy loss for average of cross-validation folds for input variable subsets}\label{fig:traintesloss}
 \end{figure}
+%================================
+% Subsubsection Test performance comparisons across variable partitions
+%================================
 % Metrics on test
+% best
+\begin{figure}
+\centering
+\begin{minipage}{.24\textwidth}
+  \centering
+\includegraphics[width=\textwidth]{pics/test_accuracy_variables.png}
+\caption{Accuracy}\label{fig:subsetacc}
+\end{minipage}
+\begin{minipage}{.01\textwidth}
+\end{minipage}
+\begin{minipage}{.24\textwidth}
+  \centering
+\includegraphics[width=\textwidth]{pics/test_auc_variables.png}
+\caption{Area under ROC}\label{fig:subsetauc}
+\end{minipage}
+\begin{minipage}{.24\textwidth}
+  \centering
+\includegraphics[width=\textwidth]{pics/test_fscore_variables.png}
+\caption{F-score}\label{fig:subsetfscore}
+\end{minipage}
+\begin{minipage}{.01\textwidth}
+\end{minipage}
+\begin{minipage}{.24\textwidth}
+  \centering
+\includegraphics[width=\textwidth]{pics/test_loss_variables.png}
+\caption{Cross-entropy}\label{fig:subsetloss}
+\end{minipage}
+\caption{Test metrics plotted for input variable subsets}\label{fig:testmetrics}
+\end{figure}
+% average
 \begin{figure}
 \centering
 \begin{minipage}{.24\textwidth}
@@ -643,20 +932,104 @@ In this section we analyse training statistics for the best performing model. Di
 % Subsubsection Qualitative assessment
 %================================
 \subsubsection{Qualitative assesment}
+In this section we characterize the overall performance of the best performing DNN models. Figure \ref{confusion} shows a confusion matrix for classification for the best performing DNN model using all the input variables. The types of mistakes the model makes in classification are evenly balanced in terms of false positives and false negatives, however since a smaller proportion of the data contains negative examples it in fact slightly favors false positives. We can see this more clearly in figure 63 which plots accuracy in terms of actual cheat grass coverage values. The worst performance is in the 0-2 percent range which contains only negative examples, so the only mistake that can be made is a false positive. 
+
+Looking closer at prediction performance
+we next analyze the model  in terms of accuracy across individual ranges of cheatgrass coverage, ecoregions, land cover classes, and soil and climactic conditions. 
+Figures 60-61 show that the models incorporating the LandSat data attain 100 \% accuracy for actual coverage ranging from 70-100 \% cheat grass coverage and accuracy above 90 \% up down to 40 \% coverage. This is despite the fact that there are fewer examples in the data set for these high coverage locations. Since the overwhelming majority of false positives and false negatives fall within the 0-40 \% range, this suggests that changing the class boundary from 2\% to 40\% may lead to more accurate classification at the expense of the overall utility of a final mapping product.
+We pay particular interest in judging if the model performs better across different ecoregions due to an unbalanced representation in the data set or something intrinsic in the environment itself.  
+Across the other ways of splitting the data into ecoregion, soil moisture temperature regime, and land cover class we see that accuracy is not correlated with frequency of occurrence. Although there does seem to be a minimum threshold for number of examples for an ecoregion to attain acceptable accuracy, considering the low performance of ecoregions 25 and 16 and corresponding small number of examples.  
+
+
 \begin{itemize}
-\item{Confusion Matrix}
-\item{Histograms according to true coverage and variables of interest}
 \item{Map of field data symbolized by classification error}
 \end{itemize}
+% cheatgrass coverage versus accuracy
+% average
+\begin{figure}
+\centering
+\begin{minipage}{.24\textwidth}
+  \centering
+\includegraphics[width=\textwidth]{pics/d1_accuracy_vs_coverage.png}
+\caption{$D_1$}
+\end{minipage}
+\begin{minipage}{.01\textwidth}
+\end{minipage}
+\begin{minipage}{.24\textwidth}
+  \centering
+\includegraphics[width=\textwidth]{pics/d2_accuracy_vs_coverage.png}
+\caption{$D_2$}
+\end{minipage}
+\begin{minipage}{.24\textwidth}
+  \centering
+\includegraphics[width=\textwidth]{pics/d3_accuracy_vs_coverage.png}
+\caption{$D_3$}
+\end{minipage}
+\begin{minipage}{.01\textwidth}
+\end{minipage}
+\begin{minipage}{.24\textwidth}
+  \centering
+\includegraphics[width=\textwidth]{pics/d4_accuracy_vs_coverage.png}
+\caption{$D_4$}
+\end{minipage}
+\caption{Accuracy for ranges of cheat grass coverage.}\label{fig:testmetrics}
+\end{figure}
+% accuracy versus categories
+% average
+\begin{figure}
+\centering
+\begin{minipage}{.24\textwidth}
+  \centering
+\includegraphics[width=\textwidth]{pics/d4_accuracy_vs_coverage.png}
+\caption{$D_1$}
+\end{minipage}
+\begin{minipage}{.01\textwidth}
+\end{minipage}
+\begin{minipage}{.24\textwidth}
+  \centering
+\includegraphics[width=\textwidth]{pics/d4_accuracy_vs_ecoregion.png}
+\caption{$D_2$}
+\end{minipage}
+\begin{minipage}{.24\textwidth}
+  \centering
+\includegraphics[width=\textwidth]{pics/d4_accuracy_vs_landcover.png}
+\caption{$D_3$}
+\end{minipage}
+\begin{minipage}{.01\textwidth}
+\end{minipage}
+\begin{minipage}{.24\textwidth}
+  \centering
+\includegraphics[width=\textwidth]{pics/d4_accuracy_vs_soil.png}
+\caption{$D_4$}
+\end{minipage}
+\caption{Accuracy for different subsets of the field locations.}\label{fig:testmetrics}
+\end{figure}
+% accuracy versus categories
+% average
+\begin{figure}
+\centering
+\begin{minipage}{.48\textwidth}
+  \centering
+\includegraphics[width=\textwidth]{pics/roc.png}
+\caption{ROC curves for best performing DNN models on different data subsets}
+\end{minipage}
+\begin{minipage}{.04\textwidth}
+\end{minipage}
+\begin{minipage}{.48\textwidth}
+  \centering
+\includegraphics[width=\textwidth]{pics/confusion_MODIS+LandSat+Niche.png}
+\caption{Confusion matrix for best performing DNN model.}\label{confusion}
+\end{minipage}
+\end{figure}
 %============================================================================================
 % Subsection Performance on Full Study Region================================================
 %=============================================================================================
 \subsection{Performance on Full Study Region}
 In this section we analyze the geographic variability in cross-validation model predictions among other things.
-\begin{figure}
-\includegraphics[width=\textwidth]{pics/modus_prob.png}
-\caption{250 meter resolution map for best deep neural network classification model.}\label{250m}
-\end{figure}
+%\begin{figure}
+%\includegraphics[width=\textwidth]{pics/modus_prob.png}
+%\caption{250 meter resolution map for best deep neural network classification model.}\label{250m}
+%\end{figure}
 \subsubsection{Pixel-wise count of cheatgrass class across model predictions}
 \subsubsection{Block statistics (count) of cheatgrass class (analogous to block area), then look at range of block counts}
 %============================================================================================
@@ -665,6 +1038,7 @@ In this section we analyze the geographic variability in cross-validation model 
 %=============================================================================================
 %============================================================================================
 \section{Conclusion and Future Work}
+\nocite{*}
 \bibliography{fiery}
 \bibliographystyle{acm}
 
